@@ -7,7 +7,6 @@ use Rubix\ML\Classifiers\KNearestNeighbors;
 use Rubix\ML\Classifiers\NaiveBayes;
 use Rubix\ML\CrossValidation\Metrics\Accuracy;
 use Rubix\ML\CrossValidation\Reports\ConfusionMatrix;
-use Rubix\ML\Datasets\Dataset;
 use Rubix\ML\Datasets\Labeled;
 use Rubix\ML\Extractors\CSV;
 use Rubix\ML\Kernels\Distance\Cosine;
@@ -23,12 +22,13 @@ use Rubix\ML\Transformers\ZScaleStandardizer;
 require __DIR__ . '/../vendor/autoload.php';
 
 $dataset = Labeled::fromIterator(new CSV(__DIR__ . '/customer-churn.csv', header: true));
+['Nao' => $nao, 'Sim' => $sim] = $dataset->stratifyByLabel();
 
-[, $testing] = $dataset->stratifiedSplit(0.8);
-$balancedDataset = balanceDataset($dataset);
-[$training, ] = $balancedDataset->stratifiedSplit(0.8);
+$undersampledDataset = $sim->merge($nao->randomize()->take($sim->count()));
 
-$transformedDataset = $dataset
+[$training, $testing] = $undersampledDataset->stratifiedSplit(0.8);
+
+$transformedDataset = $undersampledDataset
     ->apply(new NumericStringConverter())
     ->apply(new LambdaFunction(function (array &$samples) {
         $simNao = fn (string $original) => match ($original) {
@@ -45,9 +45,7 @@ $transformedDataset = $dataset
     ->apply(new OneHotEncoder())
     ->apply(new ZScaleStandardizer());
 
-[, $transformedTesting] = $transformedDataset->stratifiedSplit(0.8);
-$balancedTransformedDataset = balanceDataset($transformedDataset);
-[$transformedTraining, ] = $transformedDataset->stratifiedSplit(0.8);
+[$transformedTraining, $transformedTesting] = $transformedDataset->stratifiedSplit(0.8);
 
 $knnEuclidean = new KNearestNeighbors(kernel: new Euclidean());
 $knnEuclidean->train($transformedTraining);
@@ -119,8 +117,6 @@ echo 'Accuracy: ' . $accuracy->score($predictionsFromTree, $testing->labels()) .
 echo 'Precision: ' . calculatePrecision($confusionMatrixTree) . PHP_EOL;
 echo 'Recall: ' . calculateRecall($confusionMatrixTree) . PHP_EOL;
 
-
-
 function calculatePrecision(Report $confusionMatrix): float
 {
     $truePositives = $confusionMatrix['Sim']['Sim'];
@@ -135,19 +131,4 @@ function calculateRecall(Report $confusionMatrix): float
     $falseNegatives = $confusionMatrix['Nao']['Sim'];
 
     return $truePositives / ($truePositives + $falseNegatives);
-}
-
-function balanceDataset(Dataset $dataset): Dataset
-{
-    $counts = array_count_values($dataset->labels());
-
-    $min = min($counts);
-
-    $weights = [];
-
-    foreach ($dataset->labels() as $label) {
-        $weights[] = $min / $counts[$label];
-    }
-
-    return $dataset->randomWeightedSubsetWithReplacement(max($counts), $weights);
 }
