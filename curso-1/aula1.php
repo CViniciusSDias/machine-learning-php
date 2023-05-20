@@ -5,7 +5,7 @@ use Rubix\ML\Datasets\Labeled;
 use Rubix\ML\Datasets\Unlabeled;
 use Rubix\ML\Kernels\SVM\Linear;
 
-require 'vendor/autoload.php';
+require __DIR__ . '/../vendor/autoload.php';
 
 $porco1 = [0, 1, 0];
 $porco2 = [0, 1, 1];

@@ -7,7 +7,7 @@ use Rubix\ML\CrossValidation\Metrics\Accuracy;
 use Rubix\ML\Datasets\Labeled;
 use Rubix\ML\Transformers\ZScaleStandardizer;
 
-require 'vendor/autoload.php';
+require __DIR__ . '/../vendor/autoload.php';
 
 $csvUrlStream = fopen('https://gist.githubusercontent.com/guilhermesilveira/1b7d5475863c15f484ac495bd70975cf/raw/16aff7a0aee67e7c100a2a48b676a2d2d142f646/projects.csv', 'r');
 $headers = fgets($csvUrlStream);

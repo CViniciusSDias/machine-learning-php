@@ -6,7 +6,7 @@ use Rubix\ML\Classifiers\ClassificationTree;
 use Rubix\ML\CrossValidation\Metrics\Accuracy;
 use Rubix\ML\Datasets\Labeled;
 
-require 'vendor/autoload.php';
+require __DIR__ . '/../vendor/autoload.php';
 
 $csvUrlStream = fopen('https://gist.githubusercontent.com/guilhermesilveira/4d1d4a16ccbf6ea4e0a64a38a24ec884/raw/afd05cb0c796d18f3f5a6537053ded308ba94bf7/car-prices.csv', 'r');
 
